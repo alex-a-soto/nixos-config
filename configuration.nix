@@ -2,13 +2,51 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, nixos-hardware, pkgs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
+     <nixos-hardware/lenovo/thinkpad/x230>
       ./hardware-configuration.nix
     ];
+
+  hardware = {
+    cpu.intel.updateMicrocode = true;
+    opengl.extraPackages = [ pkgs.beignet ];
+  };
+
+  powerManagement.powertop.enable = true;
+
+  services = {
+    acpid.enable = true;
+
+    logind = {
+      lidSwitch = "hybrid-sleep";
+      lidSwitchDocked = "hybrid-sleep";
+
+    };
+
+    nixosManual.showManual = true;
+
+    tlp = {
+      enable = true;
+      extraConfig = ''
+        SATA_LINKPWR_ON_BAT=max_performance
+        START_CHARGE_THRESH_BAT0=60
+        STOP_CHARGE_THRESH_BAT0=80
+        CPU_SCALING_GOVERNOR_ON_BAT=powersave
+        ENERGY_PERF_POLICY_ON_BAT=powersave
+      '';
+    };
+
+    upower.enable = true;
+  };
+
+ nixpkgs.config.allowUnfree = true;
+ virtualisation.lxd.enable = true;
+
+
 
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
@@ -46,11 +84,98 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-     environment.systemPackages = with pkgs; [
+   environment.systemPackages = with pkgs; [
+# version control
+     git
+# interactive spell checker
+     aspell
+     aspellDicts.en
+# the non-interactive network downloader
      wget 
+# text editor
      vim
+# text editor
      nano
+# browser
      firefox
+# terminal multiplexer
+     tmux
+# email client
+     thunderbird
+# editor
+     emacs
+# interactive process viewer
+     htop
+# frontedn for xrandr
+     arandr
+# load xrandr scripts
+     autorandr
+# simple terminal
+     st
+# simple webkit-based browser
+     surf
+# simple temperature control
+     sct
+# run arbitrary commands when files change
+     entr
+# monitors filesystem events and executes commands 
+     incron
+# viewer for remote, persistent x applications
+     xpra
+# simple x image viewer
+     sxiv
+# streaming and recording program
+     obs-studio
+# spaced reptition system
+     anki
+# browser
+     google-chrome
+# file maanger
+     xfce.thunar
+    (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
+     xfce.gvfs
+     samba
+     fuse
+     xfce.exo
+     ffmpegthumbnailer
+     xfce.tumbler
+# notetaking stylus
+     xournalpp
+# secure messaging
+     signal-desktop
+# search tool
+     ripgrep
+# password manager
+     keepassxc
+# search tool
+     recoll
+# text editor
+     atom
+# audio recording/editing
+     audacity
+# synchronize files
+     syncthing
+# media player
+     vlc
+# office suite
+     libreoffice
+# document viewer
+     zathura
+# image manipulation and paint program
+     gimp
+# list contents of directories in tree-like format
+     tree
+# archive tool
+     unzip
+# C and C++ compiler
+     gcc
+# system info script
+     neofetch
+# general markup converter
+     pandoc
+# text editor
+     
+micro
    ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -66,6 +191,7 @@
 
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
+  services.openssh.enable = false;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -80,22 +206,34 @@
   sound.enable = true;
   hardware.pulseaudio.enable = true;
 
-  # Enable the X11 windowing system.
-   services.xserver.enable = true;
-   services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
-
   # Enable touchpad support.
   # services.xserver.libinput.enable = true;
 
-  # Enable the KDE Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xfce.enable = true;
+  # Enable the X11 windowing system.
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  services.xserver.enable = true;
+  services.xserver.autorun = true;
+  services.xserver.layout = "us";
+
+  # Enable the KDE Desktop Environment.
+  services.xserver.displayManager.defaultSession = "none+i3";
+  services.xserver.desktopManager.xterm.enable = false;
+  services.xserver.displayManager.lightdm.enable = true;
+  services.xserver.windowManager.i3.enable = true;
+
+   nix.allowedUsers = [ "@wheel" "alexander" ];
+
+
+  nixpkgs.config.packageOverrides = pkgs: {
+    nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/master.tar.gz") {
+      inherit pkgs;
+    };
+  };
+
+  
    users.users.alexander = {
-       isNormalUser = true;
-     extraGroups = [ "wheel" "network" ]; # Enable ‘sudo’ for the user.
+     isNormalUser = true;
+     extraGroups = [ "wheel" "network" "lxd"]; # Enable ‘sudo’ for the user.
    };
 
   # This value determines the NixOS release from which the default
@@ -107,5 +245,3 @@
   system.stateVersion = "20.03"; # Did you read the comment?
 
 }
-
-
