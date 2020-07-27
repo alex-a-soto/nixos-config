@@ -174,8 +174,8 @@
 # general markup converter
      pandoc
 # text editor
-     
 micro
+
    ];
 
   # Some programs need SUID wrappers, can be configured further or are
