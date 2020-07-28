@@ -10,6 +10,7 @@
   home.homeDirectory = "/home/alexander";
 
   programs.firefox.enable = true;
+  programs.obs-studio.enable = true;
 
 
   nixpkgs.config.packageOverrides = pkgs: {

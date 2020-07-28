@@ -1,25 +1,43 @@
-# Edit this configuration file to define what should be installed on
+#Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’)
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, options, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
+      ./hardware-configuration-desktop.nix
+      ./modules/syncthing.nix
     ];
-
 #    nixosManual.showManual = true;
- 
+
+boot.initrd.luks.devices = [
+  { 
+    name = "root";
+    device = "/dev/nvme1n1p2";
+    preLVM = true;
+  }
+];
 
  nixpkgs.config.allowUnfree = true;
  virtualisation.lxd.enable = true;
+ virtualisation.libvirtd.enable = true;
+
+  virtualisation.docker = {
+    enable = true;
+    # Only load docker service, but make it inactive. A command on the
+    # docker cli (e.g., `docker ps` or `docker run`) will activate it.
+    enableOnBoot = false;
+    # Do `docker system prune -f` periodically.
+    autoPrune.enable = true;
+  };
+  users.extraGroups.docker.members = [ "alexander" ];
 
 
   ## Use the GRUB 2 boot loader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
+   boot.loader.grub.enable = true;
+   boot.loader.grub.version = 2;
   # boot.loader.grub.efiSupport = true;
   # boot.loader.grub.efiInstallAsRemovable = true;
   # boot.loader.efi.efiSysMountPoint = "/boot/efi";
@@ -27,10 +45,16 @@
    boot.loader.grub.device = "nodev"; # or "nodev" for efi only
    boot.loader.efi.canTouchEfiVariables = true;
    boot.loader.grub.efiSupport = true;
+   boot.loader.systemd-boot.enable = true;
+   boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
+   boot.kernelModules = [ "v4l2loopback" ];
+   boot.extraModprobeConfig = ''
+         options v4l2loopback exclusive_caps=1 video_nr=9 card_label="OBS Camera"
+	     '';
 
+    boot.kernelPackages = pkgs.linuxPackages_5_6;
 
-
-   networking.hostName = "nixos"; # Define your hostname.
+   networking.hostName = "alpha"; # Define your hostname.
   #  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
@@ -41,6 +65,16 @@
   networking.interfaces.enp70s0.useDHCP = true;
   networking.interfaces.wlp69s0.useDHCP = true;
   networking.networkmanager.enable = true;
+
+  networking.firewall = {
+    allowedTCPPortRanges = [ 
+      { from = 1714; to = 1764; } # KDEConnect
+    ];
+    allowedUDPPortRanges = [      
+      { from = 1714; to = 1764; } # KDEConnect
+    ];
+  };
+
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -56,100 +90,134 @@
   # Set your time zone.
   time.timeZone = "America/New_York";
 
+  # Garbage collection
+#  nix.gc = {
+#    automatic = true;
+#    dates = "weekly";
+#    options = "--delete-older-than 30d";
+#  };
+
+  nix.trustedUsers = [ "root" "alexander" ];
+
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-   environment.systemPackages = with pkgs; [
+ environment.systemPackages = with pkgs; [
+  xsensors
+  nixUnstable
 # version control
-     git
+  git
 # interactive spell checker
-     aspell
-     aspellDicts.en
+  aspell
+  aspellDicts.en
+  networkmanagerapplet
 # the non-interactive network downloader
-     wget 
+  wget 
 # text editor
-     vim
+  vim
 # text editor
-     nano
+  nano
 # browser
-     firefox
+  firefox
 # terminal multiplexer
-     tmux
+  tmux
 # email client
-     thunderbird
+  thunderbird
 # editor
-     emacs
+  emacs
 # interactive process viewer
-     htop
+  htop
 # frontedn for xrandr
-     arandr
+  arandr
 # load xrandr scripts
-     autorandr
+  autorandr
+  v4l-utils
 # simple terminal
-     st
+  st
 # simple webkit-based browser
-     surf
+  surf
 # simple temperature control
-     sct
+  sct
 # run arbitrary commands when files change
-     entr
+  entr
 # monitors filesystem events and executes commands 
-     incron
+  incron
 # viewer for remote, persistent x applications
-     xpra
+  xpra
 # simple x image viewer
-     sxiv
+  sxiv
 # streaming and recording program
-     obs-studio
+  unstable.obs-studio
+
+  unstable.obs-v4l2sink
 # spaced reptition system
-     anki
+  anki
 # browser
-     google-chrome
+  google-chrome
 # file maanger
-     xfce.thunar
-    (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
-     xfce.gvfs
-     samba
-     fuse
-     xfce.exo
-     ffmpegthumbnailer
-     xfce.tumbler
+  kitty
+  xfce.thunar
+  (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
+  xfce.gvfs
+  samba
+  fuse
+  xfce.exo
+  ffmpegthumbnailer
+  xfce.tumbler
 # notetaking stylus
-     xournalpp
+  xournalpp
 # secure messaging
-     signal-desktop
+  signal-desktop
 # search tool
-     ripgrep
+  ripgrep
+  usbutils
+  lshw
 # password manager
-     keepassxc
+  keepassxc
 # search tool
-     recoll
+  recoll
 # text editor
-     atom
+  atom
 # audio recording/editing
-     audacity
+  audacity
 # synchronize files
-     syncthing
+  syncthing
 # media player
-     vlc
+  vlc
 # office suite
-     libreoffice
+  libreoffice
 # document viewer
-     zathura
+  zathura
 # image manipulation and paint program
-     gimp
+  gimp
 # list contents of directories in tree-like format
-     tree
+  tree
 # archive tool
-     unzip
+  unzip
+  unrar
 # C and C++ compiler
-     gcc
+  gcc
 # system info script
-     neofetch
+  neofetch
 # general markup converter
-     pandoc
+  pandoc
 # text editor
+  gparted
+  ffmpeg-full
+  recoll
+
+# VM dependencies
+  kvm qemu libvirt bridge-utils virt-manager
+  virt-viewer spice-vdagent
+
+  kdeconnect
+
+  # PulseAudio control
+    # ------------------
+    pavucontrol
+    pulseaudio-ctl
+    pasystray
      
-     micro
    ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -176,9 +244,38 @@
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
-  # Enable sound.
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+  services.printing.drivers = [ pkgs.hplip ];
+
+  # Enable sound.	
   sound.enable = true;
-  hardware.pulseaudio.enable = true;
+  hardware.pulseaudio = {
+    enable = true;
+    support32Bit = true;
+    package = pkgs.pulseaudioFull;
+    extraModules = [ pkgs.pulseaudio-modules-bt ];
+  };
+
+  # Enable bluetooth.
+  hardware.bluetooth = {
+    enable = true;
+    package = pkgs.bluezFull;
+    config.General.Enable = "Source,Sink,Media,Socket";
+  };
+
+  nixpkgs.config.packageOverrides = pkgs: {
+    nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/master.tar.gz"){
+      inherit pkgs;
+    };
+    unstable = import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs-channels/archive/nixos-unstable.tar.gz")
+     {
+      config = config.nixpkgs.config;
+    };
+  };
+
+
+
 
   # Enable touchpad support.
   # services.xserver.libinput.enable = true;
@@ -194,20 +291,17 @@
   services.xserver.desktopManager.xterm.enable = false;
   services.xserver.displayManager.lightdm.enable = true;
   services.xserver.windowManager.i3.enable = true;
+  services.xserver.videoDrivers = [ "amdgpu" ];
 
    nix.allowedUsers = [ "@wheel" "alexander" ];
-
-
-  nixpkgs.config.packageOverrides = pkgs: {
-    nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/master.tar.gz") {
-      inherit pkgs;
-    };
-  };
-
+   
   
    users.users.alexander = {
      isNormalUser = true;
-     extraGroups = [ "wheel" "network" "lxd"]; # Enable ‘sudo’ for the user.
+     extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" "network" "lxd"]; # Enable ‘sudo’ for the user.
+     group = "users";
+     home = "/home/alexander";
+     uid = 1000;
    };
 
   # This value determines the NixOS release from which the default
@@ -219,4 +313,3 @@
   system.stateVersion = "20.03"; # Did you read the comment?
 
 }
-

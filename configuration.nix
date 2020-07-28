@@ -129,7 +129,7 @@
 # spaced reptition system
      anki
 # browser
-     google-chrome
+     # google-chrome
 # file maanger
      xfce.thunar
     (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
@@ -174,8 +174,7 @@
 # general markup converter
      pandoc
 # text editor
-micro
-
+     micro
    ];
 
   # Some programs need SUID wrappers, can be configured further or are
