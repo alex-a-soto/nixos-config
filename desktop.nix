@@ -7,7 +7,7 @@
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration-desktop.nix
+      ./machines/desktop.nix
       ./modules/syncthing.nix
     ];
 #    nixosManual.showManual = true;
@@ -19,7 +19,7 @@ boot.initrd.luks.devices = [
     preLVM = true;
   }
 ];
-
+ 
  nixpkgs.config.allowUnfree = true;
  virtualisation.lxd.enable = true;
  virtualisation.libvirtd.enable = true;
@@ -47,12 +47,14 @@ boot.initrd.luks.devices = [
    boot.loader.grub.efiSupport = true;
    boot.loader.systemd-boot.enable = true;
    boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
-   boot.kernelModules = [ "v4l2loopback" ];
+   boot.kernelModules = [ 
+      "v4l2loopback" 
+];
    boot.extraModprobeConfig = ''
          options v4l2loopback exclusive_caps=1 video_nr=9 card_label="OBS Camera"
 	     '';
 
-    boot.kernelPackages = pkgs.linuxPackages_latest;
+    boot.kernelPackages = pkgs.linuxPackages_5_6;
 
    networking.hostName = "alpha"; # Define your hostname.
   #  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -103,30 +105,24 @@ boot.initrd.luks.devices = [
   # List packages installed in system profile. To search, run:
   # $ nix search wget
  environment.systemPackages = with pkgs; [
-  xsensors
-  lm_sensors
-  psensor
+  xsensors lm_sensors psensor
   nixUnstable
 # version control
   git
 # interactive spell checker
-  aspell
-  aspellDicts.en
+  aspell aspellDicts.en
   networkmanagerapplet
 # the non-interactive network downloader
   wget 
 # text editor
-  vim
-# text editor
-  nano
+  emacs vim nano 
+ # emacs
 # browser
-  firefox
+  firefox google-chrome
 # terminal multiplexer
   tmux
 # email client
   thunderbird
-# editor
-  emacs
 # interactive process viewer
   htop
 # frontedn for xrandr
@@ -149,17 +145,14 @@ boot.initrd.luks.devices = [
 # simple x image viewer
   sxiv
 # streaming and recording program
-  unstable.obs-studio
-
-  unstable.obs-v4l2sink
+  unstable.obs-studio unstable.obs-v4l2sink
 # spaced reptition system
   anki
 # browser
-  google-chrome
 # file maanger
   kitty
   xfce.thunar
-  (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
+#  (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
   xfce.gvfs
   samba
   fuse

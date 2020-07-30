@@ -1,6 +1,9 @@
 { config, pkgs, lib, ... }:
 
 {
+
+imports = [./config/emacs/default.nix];
+
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
