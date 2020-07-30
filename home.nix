@@ -10,8 +10,7 @@
   home.homeDirectory = "/home/alexander";
 
   programs.firefox.enable = true;
-  programs.obs-studio.enable = true;
-
+ # programs.obs-studio.enable = true;
 
   nixpkgs.config.packageOverrides = pkgs: {
     nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/master.tar.gz") {
@@ -46,21 +45,19 @@
         isDefault = true;
         settings = {
           "gfx.webrender.all" = true;
-          "browser.startup.homepage"= "about:blank";
-          "browser.newtabpage.enabled" = false;
           "browser.search.hiddenOneOffs" = "Google,Yahoo,Bing,Amazon.com,Twitter";
           "browser.search.suggest.enabled" = false;
           "browser.startup.page" = 3;
-          "browser.tabs.closeWindowWithLastTab" = false;
+          "browser.tabs.closeWindowWithLastTab" = true;
           "browser.urlbar.placeholderName" = "DuckDuckGo";
           "experiments.activeExperiment" = false;
           "experiments.enabled" = false;
           "experiments.supported" = false;
           "extensions.pocket.enabled" = false;
-          "general.smoothScroll" = false;
+          "general.smoothScroll" = true;
           "layout.css.devPixelsPerPx" = "1";
-          "network.IDN_show_punycode" = true;
-          "network.allow-experiments" = false;
+#          "network.IDN_show_punycode" = true;
+#          "network.allow-experiments" = false;
           "signon.rememberSignons" = false;
         };
       };

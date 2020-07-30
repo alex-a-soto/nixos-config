@@ -52,7 +52,7 @@ boot.initrd.luks.devices = [
          options v4l2loopback exclusive_caps=1 video_nr=9 card_label="OBS Camera"
 	     '';
 
-    boot.kernelPackages = pkgs.linuxPackages_5_6;
+    boot.kernelPackages = pkgs.linuxPackages_latest;
 
    networking.hostName = "alpha"; # Define your hostname.
   #  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -60,7 +60,7 @@ boot.initrd.luks.devices = [
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
-  networking.useDHCP = false;
+ # networking.useDHCP = true;
   networking.interfaces.enp68s0.useDHCP = true;
   networking.interfaces.enp70s0.useDHCP = true;
   networking.interfaces.wlp69s0.useDHCP = true;
@@ -104,6 +104,8 @@ boot.initrd.luks.devices = [
   # $ nix search wget
  environment.systemPackages = with pkgs; [
   xsensors
+  lm_sensors
+  psensor
   nixUnstable
 # version control
   git
@@ -172,8 +174,9 @@ boot.initrd.luks.devices = [
   ripgrep
   usbutils
   lshw
+  pciutils
 # password manager
-  keepassxc
+  unstable.keepassxc
 # search tool
   recoll
 # text editor
@@ -204,13 +207,14 @@ boot.initrd.luks.devices = [
 # text editor
   gparted
   ffmpeg-full
-  recoll
 
 # VM dependencies
   kvm qemu libvirt bridge-utils virt-manager
   virt-viewer spice-vdagent
 
   kdeconnect
+
+  workrave
 
   # PulseAudio control
     # ------------------
