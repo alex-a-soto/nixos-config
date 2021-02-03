@@ -1,9 +1,6 @@
 { config, pkgs, lib, ... }:
 
 {
-
-imports = [./config/emacs/default.nix];
-
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
@@ -11,6 +8,7 @@ imports = [./config/emacs/default.nix];
   # paths it should manage.
   home.username = "alexander";
   home.homeDirectory = "/home/alexander";
+
 
   programs.firefox.enable = true;
  # programs.obs-studio.enable = true;

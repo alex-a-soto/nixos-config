@@ -13,6 +13,7 @@
   ) ++ (
     with melpa; [
       better-defaults
+      nix-mode
     ]
   ) ++ (
     with melpaStable; [

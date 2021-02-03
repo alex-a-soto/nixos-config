@@ -7,22 +7,24 @@
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./machines/desktop.nix
+      ./hardware-configuration.nix
       ./modules/syncthing.nix
+      #      ./modules/digimend.nix
+      #./modules/emacs.nix
     ];
-#    nixosManual.showManual = true;
+  #    nixosManual.showManual = true;
 
-boot.initrd.luks.devices = [
-  { 
-    name = "root";
-    device = "/dev/nvme1n1p2";
-    preLVM = true;
-  }
-];
- 
- nixpkgs.config.allowUnfree = true;
- virtualisation.lxd.enable = true;
- virtualisation.libvirtd.enable = true;
+  boot.initrd.luks.devices = [
+    {
+      name = "root";
+      device = "/dev/nvme1n1p2";
+      preLVM = true;
+    }
+  ];
+
+  nixpkgs.config.allowUnfree = true;
+  virtualisation.lxd.enable = true;
+  virtualisation.libvirtd.enable = true;
 
   virtualisation.docker = {
     enable = true;
@@ -36,46 +38,48 @@ boot.initrd.luks.devices = [
 
 
   ## Use the GRUB 2 boot loader.
-   boot.loader.grub.enable = true;
-   boot.loader.grub.version = 2;
+  boot.loader.grub.enable = true;
+  boot.loader.grub.version = 2;
   # boot.loader.grub.efiSupport = true;
   # boot.loader.grub.efiInstallAsRemovable = true;
   # boot.loader.efi.efiSysMountPoint = "/boot/efi";
   # Define on which hard drive you want to install Grub.
-   boot.loader.grub.device = "nodev"; # or "nodev" for efi only
-   boot.loader.efi.canTouchEfiVariables = true;
-   boot.loader.grub.efiSupport = true;
-   boot.loader.systemd-boot.enable = true;
-   boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
-   boot.kernelModules = [ 
-      "v4l2loopback" 
-];
-   boot.extraModprobeConfig = ''
+  boot.loader.grub.device = "nodev"; # or "nodev" for efi only
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.efiSupport = true;
+  boot.loader.systemd-boot.enable = true;
+  boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback config.boot.kernelPackages.digimend];
+  boot.kernelModules = [
+    "v4l2loopback"
+  ];
+  boot.extraModprobeConfig = ''
          options v4l2loopback exclusive_caps=1 video_nr=9 card_label="OBS Camera"
 	     '';
 
-    boot.kernelPackages = pkgs.linuxPackages_5_6;
+  boot.kernelPackages = pkgs.linuxPackages_5_6;
 
-   networking.hostName = "alpha"; # Define your hostname.
-  #  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  networking.hostName = "alpha"; # Define your hostname.
+  #   networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
- # networking.useDHCP = true;
+  networking.useDHCP = false;
   networking.interfaces.enp68s0.useDHCP = true;
   networking.interfaces.enp70s0.useDHCP = true;
   networking.interfaces.wlp69s0.useDHCP = true;
   networking.networkmanager.enable = true;
 
   networking.firewall = {
-    allowedTCPPortRanges = [ 
+    allowedTCPPortRanges = [
       { from = 1714; to = 1764; } # KDEConnect
     ];
-    allowedUDPPortRanges = [      
+    allowedUDPPortRanges = [
       { from = 1714; to = 1764; } # KDEConnect
     ];
   };
+
+
 
 
   # Configure network proxy if necessary
@@ -83,139 +87,206 @@ boot.initrd.luks.devices = [
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
-   i18n.defaultLocale = "en_US.UTF-8";
-   console = {
-     font = "Lat2-Terminus16";
-     keyMap = "us";
-   };
+  i18n.defaultLocale = "en_US.UTF-8";
+  console = {
+    font = "Lat2-Terminus16";
+    keyMap = "us";
+  };
 
   # Set your time zone.
   time.timeZone = "America/New_York";
 
   # Garbage collection
-#  nix.gc = {
-#    automatic = true;
-#    dates = "weekly";
-#    options = "--delete-older-than 30d";
-#  };
+  #  nix.gc = {
+  #    automatic = true;
+  #    dates = "weekly";
+  #    options = "--delete-older-than 30d";
+  #  };
 
   nix.trustedUsers = [ "root" "alexander" ];
+
+  nixpkgs.config.permittedInsecurePackages = [
+    "openssl-1.0.2u"
+  ];
+
+
 
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
- environment.systemPackages = with pkgs; [
-  xsensors lm_sensors psensor
-  nixUnstable
-# version control
-  git
-# interactive spell checker
-  aspell aspellDicts.en
-  networkmanagerapplet
-# the non-interactive network downloader
-  wget 
-# text editor
-  emacs vim nano 
- # emacs
-# browser
-  firefox google-chrome
-# terminal multiplexer
-  tmux
-# email client
-  thunderbird
-# interactive process viewer
-  htop
-# frontedn for xrandr
-  arandr
-# load xrandr scripts
-  autorandr
-  v4l-utils
-# simple terminal
-  st
-# simple webkit-based browser
-  surf
-# simple temperature control
-  sct
-# run arbitrary commands when files change
-  entr
-# monitors filesystem events and executes commands 
-  incron
-# viewer for remote, persistent x applications
-  xpra
-# simple x image viewer
-  sxiv
-# streaming and recording program
-  unstable.obs-studio unstable.obs-v4l2sink
-# spaced reptition system
-  anki
-# browser
-# file maanger
-  kitty
-  xfce.thunar
-#  (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
-  xfce.gvfs
-  samba
-  fuse
-  xfce.exo
-  ffmpegthumbnailer
-  xfce.tumbler
-# notetaking stylus
-  xournalpp
-# secure messaging
-  signal-desktop
-# search tool
-  ripgrep
-  usbutils
-  lshw
-  pciutils
-# password manager
-  unstable.keepassxc
-# search tool
-  recoll
-# text editor
-  atom
-# audio recording/editing
-  audacity
-# synchronize files
-  syncthing
-# media player
-  vlc
-# office suite
-  libreoffice
-# document viewer
-  zathura
-# image manipulation and paint program
-  gimp
-# list contents of directories in tree-like format
-  tree
-# archive tool
-  unzip
-  unrar
-# C and C++ compiler
-  gcc
-# system info script
-  neofetch
-# general markup converter
-  pandoc
-# text editor
-  gparted
-  ffmpeg-full
+  environment.systemPackages = with pkgs; [
+    alsaUtils
+    alsaLib
+    alsaTools
+    xsensors lm_sensors psensor
+    nixUnstable
+    # version control
+    git
+    # interactive spell checker
+    aspell aspellDicts.en
+    networkmanagerapplet
+    # the non-interactive network downloader
+    wget
+    # text editor
+    vim nano
+    unstable.emacs
+    # browser
+    firefox
+    unstable.google-chrome
+    # terminal multiplexer
+    tmux
+    # email client
+    #thunderbird
+    # interactive process viewer
+    htop
+    magic-wormhole
+    # frontedn for xrandr
+    arandr
+    # load xrandr scripts
+    autorandr
+    v4l-utils
+    # simple terminal
+    st
+    # simple webkit-based browser
+    #surf
+    # simple temperature control
+    sct
+    # run arbitrary commands when files change
+    #entr
+    # monitors filesystem events and executes commands
+    #incron
+    # viewer for remote, persistent x applications
+    #xpra
+    # simple x image viewer
+    sxiv
+    simplescreenrecorder
+    # streaming and recording program
+    unstable.obs-studio unstable.obs-v4l2sink
+    # spaced reptition system
+    anki
+    # browser
+    # file maanger
+#    kitty
+    xfce.thunar
+    #  (xfce.thunar.override { thunarPlugins = [ xfce.thunar-archive-plugin xfce.thunar-volman ]; })
+    xarchiver
+    xfce.xfce4-terminal
+    rofi
+    xfce.gvfs
+    samba
+    fuse
+    xfce.exo
+    ffmpegthumbnailer
+    xfce.tumbler
+    viewnior
+    # notetaking stylus
+    xournalpp
+    # secure messaging
+    signal-desktop
+    # search tool
+    ripgrep
+    usbutils
+    lshw
+    pciutils
+    # password manager
+    unstable.keepassxc
+    # search tool
+    recoll
+    # text editor
+    atom
+    # audio recording/editing
+    audacity
+    # synchronize files
+    syncthing
+    # media player
+    vlc
+    mpv
+    celluloid
+    # office suite
+    libreoffice
+    # document viewer
+    zathura
+    # image manipulation and paint program
+    gimp
+    # list contents of directories in tree-like format
+    tree
+    # archive tool
+    unzip
+    p7zip
+    unrar
+    # C and C++ compiler
+    gcc
+    # system info script
+    neofetch
+    # general markup converter
+    pandoc
+    # text editor
+    gparted
+    ffmpeg-full
 
-# VM dependencies
-  kvm qemu libvirt bridge-utils virt-manager
-  virt-viewer spice-vdagent
+    # VM dependencies
+    kvm qemu libvirt bridge-utils virt-manager
+    virt-viewer spice-vdagent
 
-  kdeconnect
+    kdeconnect
 
-  workrave
+    workrave
+    imagemagick7
 
-  # PulseAudio control
+    # PulseAudio control
     # ------------------
     pavucontrol
     pulseaudio-ctl
     pasystray
-     
-   ];
+
+    plantuml
+    graphviz
+    ditaa
+    python3
+#    python37Packages.python-language-server
+    cmake
+    direnv
+    #    nodejs
+    #    unstable.nodejs-slim-14_x
+    scrot
+    xclip
+    roboto-mono
+    fira-code
+    protonvpn-cli-ng
+    dmidecode
+    niv
+    unstable.gromit-mpx
+    linuxPackages_5_6.digimend
+    #    unstable.nodePackages_latest.typescript-language-server
+    xf86_input_wacom
+    xorg.xev
+    redshift-wlr
+    treesheets
+#    haskellPackages.arbtt
+    krita
+#    tor-browser-bundle-bin
+    gajim
+    twinkle
+    dino
+#    gnumake
+#    libtool
+#    cmake
+#    libvterm
+    vscode-with-extensions
+    youtube-dl
+    zip
+    exiftool
+    texlive.combined.scheme-full
+    google-fonts
+#    qtcreator
+#    mkvtoolnix
+#    jq
+    xdotool
+    picom
+    zoom-us
+    gocryptfs
+
+  ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -232,6 +303,9 @@ boot.initrd.luks.devices = [
   # services.openssh.enable = true;
   services.openssh.enable = false;
 
+  services.xserver.wacom.enable = true;
+  services.lorri.enable = true;
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
@@ -245,7 +319,7 @@ boot.initrd.luks.devices = [
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.hplip ];
 
-  # Enable sound.	
+  # Enable sound.
   sound.enable = true;
   hardware.pulseaudio = {
     enable = true;
@@ -253,6 +327,7 @@ boot.initrd.luks.devices = [
     package = pkgs.pulseaudioFull;
     extraModules = [ pkgs.pulseaudio-modules-bt ];
   };
+
 
   # Enable bluetooth.
   hardware.bluetooth = {
@@ -266,9 +341,9 @@ boot.initrd.luks.devices = [
       inherit pkgs;
     };
     unstable = import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs-channels/archive/nixos-unstable.tar.gz")
-     {
-      config = config.nixpkgs.config;
-    };
+      {
+        config = config.nixpkgs.config;
+      };
   };
 
 
@@ -290,16 +365,16 @@ boot.initrd.luks.devices = [
   services.xserver.windowManager.i3.enable = true;
   services.xserver.videoDrivers = [ "amdgpu" ];
 
-   nix.allowedUsers = [ "@wheel" "alexander" ];
-   
-  
-   users.users.alexander = {
-     isNormalUser = true;
-     extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" "network" "lxd"]; # Enable ‘sudo’ for the user.
-     group = "users";
-     home = "/home/alexander";
-     uid = 1000;
-   };
+  nix.allowedUsers = [ "@wheel" "alexander" ];
+
+
+  users.users.alexander = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "video" "audio" "disk" "networkmanager" "network" "lxd"]; # Enable ‘sudo’ for the user.
+    group = "users";
+    home = "/home/alexander";
+    uid = 1000;
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
