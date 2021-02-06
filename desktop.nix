@@ -14,13 +14,10 @@
     ];
   #    nixosManual.showManual = true;
 
-  boot.initrd.luks.devices = [
-    {
-      name = "root";
+  boot.initrd.luks.devices.root = {
       device = "/dev/nvme1n1p2";
-      preLVM = true;
-    }
-  ];
+        preLVM = true;
+  };
 
   nixpkgs.config.allowUnfree = true;
   virtualisation.lxd.enable = true;
@@ -56,7 +53,7 @@
          options v4l2loopback exclusive_caps=1 video_nr=9 card_label="OBS Camera"
 	     '';
 
-  boot.kernelPackages = pkgs.linuxPackages_5_6;
+  boot.kernelPackages = pkgs.linuxPackages_5_10;
 
   networking.hostName = "alpha"; # Define your hostname.
   #   networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -132,7 +129,7 @@
     unstable.emacs
     # browser
     firefox
-    unstable.google-chrome
+    google-chrome
     # terminal multiplexer
     tmux
     # email client
@@ -252,11 +249,11 @@
     xclip
     roboto-mono
     fira-code
-    protonvpn-cli-ng
+#    protonvpn-cli-ng
     dmidecode
     niv
     unstable.gromit-mpx
-    linuxPackages_5_6.digimend
+    linuxPackages_5_10.digimend
     #    unstable.nodePackages_latest.typescript-language-server
     xf86_input_wacom
     xorg.xev
@@ -285,6 +282,7 @@
     picom
     zoom-us
     gocryptfs
+    mtpaint
 
   ];
 
